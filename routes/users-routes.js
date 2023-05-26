@@ -3,7 +3,7 @@ import pool from "../db.js";
 import bcrypt from "bcrypt";
 import authenticateToken from "../middleware/authorization.js";
 import jwtTokens from "../utils/jwt-helpers.js";
-
+import jwt from "jsonwebtoken";
 let refreshTokens = [];
 
 const router = express.Router();
@@ -13,9 +13,21 @@ router.use(express.json());
 // su dung access token de lay du lieu
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    console.log(req.cookies);
-    const users = await pool.query("SELECT * FROM users");
-    res.json({ users: users.rows });
+    //decode
+    const accessToken = req.cookies.accessToken;
+    try {
+      const decodedToken = jwt.verify(
+        accessToken,
+        process.env.ACCESS_TOKEN_SECRET
+      );
+      const user_email = decodedToken.user_email;
+      console.log(user_email);
+      const user_info = await pool.query("SELECT * FROM users WHERE user_email = $1", [user_email]);
+      console.log(user_info.rows)
+      res.json({ users: user_info.rows });
+    } catch (error) {
+      console.error(error);
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
