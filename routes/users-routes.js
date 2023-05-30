@@ -13,7 +13,7 @@ router.use(express.json());
 // su dung access token de lay du lieu
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    //decode
+    //decode to get information of user who has logging
     const accessToken = req.cookies.accessToken;
     try {
       const decodedToken = jwt.verify(
@@ -26,6 +26,7 @@ router.get("/", authenticateToken, async (req, res) => {
       console.log(user_info.rows)
       res.json({ users: user_info.rows });
     } catch (error) {
+      console.log(error)
       console.error(error);
     }
   } catch (error) {
@@ -35,6 +36,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
 // dang ky user, tra ve token
 router.post("/", async (req, res) => {
+  console.log(req.body);
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const newUser = await pool.query(
@@ -43,6 +45,7 @@ router.post("/", async (req, res) => {
     );
     res.json(jwtTokens(newUser.rows[0]));
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });

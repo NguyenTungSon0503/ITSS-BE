@@ -4,10 +4,12 @@ CREATE TYPE role AS ENUM ('admin', 'user', 'partner');
 
 CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY, 
-    user_name text NOT NULL, 
-    user_email text NOT NULL, 
-    user_password text NOT NULL,
+    user_name TEXT UNIQUE NOT NULL, 
+    user_email TEXT NOT NULL, 
+    user_password TEXT NOT NULL,
     user_role role NOT NULL, 
+    -- add avatar field, co the set default la avatar default (tinh sau)
+    avatar TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
