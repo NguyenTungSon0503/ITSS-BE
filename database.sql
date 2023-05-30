@@ -4,8 +4,8 @@ CREATE TYPE role AS ENUM ('admin', 'user', 'partner');
 
 CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY, 
-    user_name TEXT UNIQUE NOT NULL, 
-    user_email TEXT NOT NULL, 
+    user_name TEXT NOT NULL, 
+    user_email TEXT UNIQUE NOT NULL, 
     user_password TEXT NOT NULL,
     user_role role NOT NULL, 
     -- add avatar field, co the set default la avatar default (tinh sau)
