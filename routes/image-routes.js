@@ -3,6 +3,8 @@ import authenticateToken from "../middleware/authorization.js";
 import pool from "../db.js";
 import jwt from "jsonwebtoken";
 import express from "express";
+import decodedToken from "../middleware/decode.js";
+
 const router = express.Router();
 router.use(express.json());
 
@@ -12,17 +14,8 @@ router.get("/", authenticateToken, async (req, res) => {
   try {
     //get access token from cookie from client 
     const accessToken = req.cookies.accessToken;
-    //decode to get information of user who login
-    const decodedToken = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_SECRET
-    );
-    // get PublicID from DB and send it to client
-    const getPublicID = await pool.query(
-      "SELECT avatar FROM users WHERE user_email = $1",
-      [decodedToken.user_email]
-    );
-    const publicID = getPublicID.rows[0].avatar;
+    const userInfo = await decodedToken(accessToken);
+    const publicID = userInfo.avatar;
     console.log(publicID);
     const { resources } = await cloudinary.search
       //folder with preset
