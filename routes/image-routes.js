@@ -10,13 +10,13 @@ router.use(express.json());
 
 //if wanna domain is /api/images/get then add /get behind
 router.get("/", authenticateToken, async (req, res) => {
-  console.log(req.cookies.accessToken);
+  // console.log(req.cookies.accessToken);
   try {
     //get access token from cookie from client 
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
     const publicID = userInfo.avatar;
-    console.log(publicID);
+    // console.log(publicID);
     const { resources } = await cloudinary.search
       //folder with preset
       .expression("folder:test")

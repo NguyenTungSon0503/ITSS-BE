@@ -9,7 +9,7 @@ router.use(express.json());
 
 router.post("/login", async (req, res) => {
   try {
-    console.log(req.cookies, req.get("origin"));
+    // console.log(req.cookies, req.get("origin"));
     const { email, password } = req.body;
     const users = await pool.query(
       "SELECT * FROM users WHERE user_email = $1",
@@ -41,7 +41,7 @@ router.post("/login", async (req, res) => {
 router.get("/refresh_token", (req, res) => {
   try {
     const refreshToken = req.cookies.refresh_token;
-    console.log(req.cookies);
+    // console.log(req.cookies);
     if (refreshToken === null) return res.sendStatus(401);
     jwt.verify(
       refreshToken,

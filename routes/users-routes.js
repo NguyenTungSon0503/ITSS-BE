@@ -17,7 +17,7 @@ router.get("/", authenticateToken, async (req, res) => {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
     res.json({ users: userInfo });
-    console.log(userInfo);
+    // console.log(userInfo);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
