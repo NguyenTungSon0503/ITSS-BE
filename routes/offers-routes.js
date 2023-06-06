@@ -7,54 +7,125 @@ const router = express.Router();
 router.use(express.json());
 
 //if wanna domain is /api/images/get then add /get behind
-router.get("/partner_offer", authenticateToken, async (req, res) => {
-  const accessToken = req.cookies.accessToken;
-  const userInfo = await decodedToken(accessToken);
-  if (userInfo.user_role === "partner") {
-    try {
-      const getOfferInfo = await pool.query("SELECT * FROM offers")
-      const offerInfo = getOfferInfo.rows
-      console.log(offerInfo);
-      res.send({offers: {offerInfo}});
-    } catch (e) {
-      console.log(e);
-      res.status(500).json({ messege: e.message });
+router.get("/all_offers", authenticateToken, async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    const userInfo = await decodedToken(accessToken);
+
+    if (userInfo.user_role !== "partner") {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to perform this action" });
     }
-  } else {
-    res
-      .status(401)
-      .json({ messege: "You are not authorized to do this action" });
+
+    const getInvitationsInfo = await pool.query("SELECT * FROM invitations");
+    const invitationsInfo = getInvitationsInfo.rows;
+
+    // console.log(InvitationsInfo);
+    res.send({ invitations: invitationsInfo });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
   }
 });
 
 router.post("/", authenticateToken, async (req, res) => {
-  const accessToken = req.cookies.accessToken;
-  const userInfo = await decodedToken(accessToken);
-  if (userInfo.user_role === "user") {
-    try {
-      const newOffer = await pool.query(
-        "INSERT INTO offers (inviter_id, start_time, end_time, date, sex, age, location, meal_price_range, description) VALUES ($1,$2,$3,$4,$5,$6,$7,$8, $9) RETURNING *",
-        [
-          userInfo.id,
-          req.body.hour_start,
-          req.body.hour_end,
-          req.body.date,
-          req.body.sex,
-          req.body.age,
-          req.body.location,
-          req.body.meal_price,
-          req.body.note,
-        ]
-      );
-      res.send(newOffer.rows[0]);
-    } catch (e) {
-      console.log(e);
-      res.status(500).json({ messege: e.message });
+  try {
+    const accessToken = req.cookies.accessToken;
+    const userInfo = await decodedToken(accessToken);
+
+    if (userInfo.user_role !== "user") {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to perform this action" });
     }
-  } else {
-    res
-      .status(401)
-      .json({ messege: "You are not authorized to do this action" });
+
+    const { hour_start, hour_end, date, sex, age, location, meal_price, note } =
+      req.body;
+
+    const newInvitation = await pool.query(
+      "INSERT INTO invitations (invitation_sender_id, start_time, end_time, date, sex, age, location, meal_price_range, description) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *",
+      [
+        userInfo.id,
+        hour_start,
+        hour_end,
+        date,
+        sex,
+        age,
+        location,
+        meal_price,
+        note,
+      ]
+    );
+
+    res.send(newInvitation.rows[0]);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/partner_offer", authenticateToken, async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    const userInfo = await decodedToken(accessToken);
+
+    if (userInfo.user_role !== "partner") {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to perform this action" });
+    }
+
+    const getInvitationsInfo = await pool.query("SELECT * FROM invitations");
+    const invitations = getInvitationsInfo.rows;
+    const uniqueInvitationSenderIDs = [
+      ...new Set(
+        invitations.map((invitation) => invitation.invitation_sender_id)
+      ),
+    ];
+
+    const responseData = [];
+
+    for (const invitationSenderId of uniqueInvitationSenderIDs) {
+      const getInvitationSenderInfo = await pool.query(
+        "SELECT user_name, avatar FROM users WHERE id = $1",
+        [invitationSenderId]
+      );
+      const invitationSenderInfo = getInvitationSenderInfo.rows[0];
+
+      const invitedSenderInfo = {
+        user_name: invitationSenderInfo.user_name,
+        avatar: invitationSenderInfo.avatar,
+      };
+
+      const getInvitations = await pool.query(
+        "SELECT * FROM invitations WHERE invitation_sender_id = $1",
+        [invitationSenderId]
+      );
+      const invitations = getInvitations.rows;
+
+      const invitationArray = invitations.map((invitationInfo) => ({
+        invitation_id: invitationInfo.id,
+        invitation_sender_id: invitationInfo.invitation_sender_id,
+        start_time: invitationInfo.start_time,
+        end_time: invitationInfo.end_time,
+        date: invitationInfo.date,
+        sex: invitationInfo.sex,
+        age: invitationInfo.age,
+        location: invitationInfo.location,
+        meal_price: invitationInfo.meal_price_range,
+        description: invitationInfo.description,
+      }));
+
+      const data = { invitedSenderInfo, invitations: invitationArray };
+      responseData.push(data);
+    }
+
+    // console.log(responseData);
+    res.send(responseData);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
   }
 });
 

@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS users(
 );
 
 -- offers table
-CREATE TABLE IF NOT EXISTS offers(
+CREATE TABLE IF NOT EXISTS invitations(
 id SERIAL PRIMARY KEY,
-inviter_id INTEGER NOT NULL,
-FOREIGN KEY (inviter_id) REFERENCES users(id),
+invitation_sender_id INTEGER NOT NULL,
+FOREIGN KEY (invitation_sender_id) REFERENCES users(id),
 start_time TEXT NOT NULL,
 end_time TEXT NOT NULL,
 date TIMESTAMP NOT NULL,
