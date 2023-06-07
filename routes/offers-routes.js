@@ -2,6 +2,7 @@ import express, { query } from "express";
 import authenticateToken from "../middleware/authorization.js";
 import decodedToken from "../middleware/decode.js";
 import pool from "../db.js";
+import fixDate from "../utils/date-helpers.js";
 
 const router = express.Router();
 router.use(express.json());
@@ -11,7 +12,7 @@ router.get("/all_offers", authenticateToken, async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
-
+    // only partner role is allowed
     if (userInfo.user_role !== "partner") {
       return res
         .status(401)
@@ -19,9 +20,17 @@ router.get("/all_offers", authenticateToken, async (req, res) => {
     }
 
     const getInvitationsInfo = await pool.query("SELECT * FROM invitations");
-    const invitationsInfo = getInvitationsInfo.rows;
+    //update all of date of invitations with fixDate function
+    let invitationsInfo = getInvitationsInfo.rows;
+    invitationsInfo = invitationsInfo.map((invitation) => {
+      const updatedDate = fixDate(invitation.date);
+      return {
+        ...invitation,
+        date: updatedDate,
+      };
+    });
 
-    // console.log(InvitationsInfo);
+    // console.log(invitationsInfo);
     res.send({ invitations: invitationsInfo });
   } catch (error) {
     console.log(error);
@@ -29,11 +38,13 @@ router.get("/all_offers", authenticateToken, async (req, res) => {
   }
 });
 
+// Insert data when client sends request
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
 
+    // only user role is allowed
     if (userInfo.user_role !== "user") {
       return res
         .status(401)
@@ -65,11 +76,13 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
+// API format: group invitations by user
 router.get("/partner_offer", authenticateToken, async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
 
+    // only partner role is allowed
     if (userInfo.user_role !== "partner") {
       return res
         .status(401)
@@ -122,6 +135,64 @@ router.get("/partner_offer", authenticateToken, async (req, res) => {
     }
 
     // console.log(responseData);
+    res.send(responseData);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// API format: each invitation has its own userInfo
+router.get("/invitations", authenticateToken, async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    const userInfo = await decodedToken(accessToken);
+
+    // only partner role is allowed
+    if (userInfo.user_role !== "partner") {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to perform this action" });
+    }
+
+    const getInvitationsInfo = await pool.query(
+      "SELECT * FROM invitations ORDER BY created_at DESC;"
+    );
+    let invitations = getInvitationsInfo.rows;
+    //update all of date of invitations with fixDate function
+    invitations = invitations.map((invitation) => {
+      const updatedDate = fixDate(invitation.date);
+      return {
+        ...invitation,
+        date: updatedDate,
+      };
+    });
+    //get userInfo for each invitation
+    const responseData = [];
+    for (const invitation of invitations) {
+      const invitationSenderId = invitation.invitation_sender_id;
+      try {
+        //query userInfo with foreign key invitationSenderId
+        const getInvitationSenderInfo = await pool.query(
+          "SELECT * FROM users WHERE id = $1",
+          [invitationSenderId]
+        );
+        const invitationSenderInfo = getInvitationSenderInfo.rows[0];
+        // object userInfo
+        const invitedSenderInfo = {
+          user_name: invitationSenderInfo.user_name,
+          avatar: invitationSenderInfo.avatar,
+        };
+        // object with userInfo and invitationInfor
+        const data = {
+          userInfo: invitedSenderInfo,
+          invitationInfor: invitation,
+        };
+        responseData.push(data);
+      } catch (err) {
+        res.json({ message: err.message });
+      }
+    }
     res.send(responseData);
   } catch (error) {
     console.log(error);
