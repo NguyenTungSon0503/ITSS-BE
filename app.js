@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import imageRouter from "./routes/image-routes.js"
+import offersRouter from "./routes/offers-routes.js"
 
 //change domain to /api/images
 dotenv.config();
@@ -27,6 +28,7 @@ app.use("/", express.static(join(__dirname, "public")));
 app.use("/api/images", imageRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/offers", offersRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is listening on port:${PORT}`);

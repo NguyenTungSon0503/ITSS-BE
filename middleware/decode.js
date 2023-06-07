@@ -13,7 +13,7 @@ function decodedToken(accessToken) {
       pool
         .query("SELECT * FROM users WHERE user_email = $1", [user_email])
         .then((result) => {
-          console.log(result.rows);
+          // console.log(result.rows);
           resolve(result.rows[0]);
         })
         .catch((error) => {
