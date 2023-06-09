@@ -4,6 +4,8 @@ import {
   createInvitation,
   getInvitationsTest,
   getInvitations,
+  createRejectedInvitation,
+  getInvitationsNew,
 } from "../controllers/offerController.js";
 import authenticateToken from "../middleware/authorization.js";
 
@@ -21,5 +23,10 @@ router.get("/partner_offer", authenticateToken, getInvitationsTest);
 
 // API format: each invitation has its own userInfo
 router.get("/invitations", authenticateToken, getInvitations);
+
+router.post("/reject", authenticateToken, createRejectedInvitation);
+
+router.get("/test", authenticateToken, getInvitationsNew);
+
 
 export default router;

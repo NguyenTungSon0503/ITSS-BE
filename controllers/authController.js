@@ -7,7 +7,7 @@ const login = async (req, res) => {
     // console.log(req.cookies, req.get("origin"));
     const { email, password } = req.body;
     const users = await pool.query(
-      "SELECT * FROM users WHERE user_email = $1",
+      "SELECT * FROM users WHERE email = $1",
       [email]
     );
     if (users.rows.length === 0)
@@ -15,7 +15,7 @@ const login = async (req, res) => {
     //PASSWORD CHECK
     const validPassword = await bcrypt.compare(
       password,
-      users.rows[0].user_password
+      users.rows[0].password
     );
     if (!validPassword)
       return res.status(401).json({ error: "Incorrect password" });

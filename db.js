@@ -4,7 +4,7 @@ const {Pool} = pg;
 let localPoolConfig = {
     host: 'localhost',
     port: 5432,
-    database: 'jwttest',
+    database: 'itss',
     user: 'postgres',
     password: 'tungsontk3'
 }
