@@ -31,10 +31,7 @@ const createUserImage = async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     //decode to get information of user who is logining
-    const decodedToken = jwt.verify(
-      accessToken,
-      process.env.ACCESS_TOKEN_SECRET
-    );
+    const userInfo = await decodedToken(accessToken);
     const fileStr = req.body.data;
     const uploadResponse = await cloudinary.uploader.upload(fileStr, {
       //create new preset in cloudinary console
@@ -42,8 +39,8 @@ const createUserImage = async (req, res) => {
     });
     // update avatar field with publicId has taken from client
     const newAvatar = await pool.query(
-      "UPDATE ONLY users SET avatar = $1 WHERE user_email = $2 RETURNING avatar",
-      [uploadResponse.public_id, decodedToken.user_email]
+      "UPDATE ONLY users SET avatar = $1 WHERE email = $2 RETURNING avatar",
+      [uploadResponse.public_id, userInfo.email]
     );
     // console.log(newAvatar.rows);
     res.json({ msg: "uploaded successfully" });

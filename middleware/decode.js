@@ -9,11 +9,10 @@ function decodedToken(accessToken) {
         accessToken,
         process.env.ACCESS_TOKEN_SECRET
       );
-      const user_email = decodedToken.user_email;
+      const email = decodedToken.email;
       pool
-        .query("SELECT * FROM users WHERE user_email = $1", [user_email])
+        .query("SELECT * FROM users WHERE email = $1", [email])
         .then((result) => {
-          // console.log(result.rows);
           resolve(result.rows[0]);
         })
         .catch((error) => {

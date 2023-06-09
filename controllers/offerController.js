@@ -1,4 +1,3 @@
-import authenticateToken from "../middleware/authorization.js";
 import decodedToken from "../middleware/decode.js";
 import pool from "../db.js";
 import fixDate from "../utils/date-helpers.js";
@@ -8,7 +7,7 @@ const getAllInvitations = async (req, res) => {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
     // only partner role is allowed
-    if (userInfo.user_role !== "partner") {
+    if (userInfo.role !== "partner") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
@@ -32,13 +31,14 @@ const getAllInvitations = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const createInvitation = async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
 
     // only user role is allowed
-    if (userInfo.user_role !== "user") {
+    if (userInfo.role !== "user") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
@@ -68,13 +68,14 @@ const createInvitation = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const getInvitationsTest = async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
 
     // only partner role is allowed
-    if (userInfo.user_role !== "partner") {
+    if (userInfo.role !== "partner") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
@@ -89,16 +90,15 @@ const getInvitationsTest = async (req, res) => {
     ];
 
     const responseData = [];
-
     for (const invitationSenderId of uniqueInvitationSenderIDs) {
       const getInvitationSenderInfo = await pool.query(
-        "SELECT user_name, avatar FROM users WHERE id = $1",
+        "SELECT name, avatar FROM users WHERE id = $1",
         [invitationSenderId]
       );
       const invitationSenderInfo = getInvitationSenderInfo.rows[0];
 
       const invitedSenderInfo = {
-        user_name: invitationSenderInfo.user_name,
+        user_name: invitationSenderInfo.name,
         avatar: invitationSenderInfo.avatar,
       };
 
@@ -132,13 +132,14 @@ const getInvitationsTest = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 const getInvitations = async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
 
     // only partner role is allowed
-    if (userInfo.user_role !== "partner") {
+    if (userInfo.role !== "partner") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
@@ -169,7 +170,7 @@ const getInvitations = async (req, res) => {
         const invitationSenderInfo = getInvitationSenderInfo.rows[0];
         // object userInfo
         const invitedSenderInfo = {
-          user_name: invitationSenderInfo.user_name,
+          user_name: invitationSenderInfo.name,
           avatar: invitationSenderInfo.avatar,
         };
         // object with userInfo and invitationInfor
@@ -190,6 +191,16 @@ const getInvitations = async (req, res) => {
 };
 
 const createRejectedInvitation = async (req, res) => {
+  const accessToken = req.cookies.accessToken;
+  const userInfo = await decodedToken(accessToken);
+
+  // only partner role is allowed
+  if (userInfo.role !== "partner") {
+    return res
+      .status(401)
+      .json({ message: "You are not authorized to perform this action" });
+  }
+
   try {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
@@ -212,7 +223,7 @@ const getInvitationsNew = async (req, res) => {
     const userInfo = await decodedToken(accessToken);
     const userID = userInfo.id;
     // only partner role is allowed
-    if (userInfo.user_role !== "partner") {
+    if (userInfo.role !== "partner") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
@@ -257,7 +268,7 @@ const getInvitationsNew = async (req, res) => {
             date: updatedDate,
           };
           const invitedSenderInfo = {
-            user_name: invitationSenderInfo.user_name,
+            user_name: invitationSenderInfo.name,
             avatar: invitationSenderInfo.avatar,
           };
           const data = {
