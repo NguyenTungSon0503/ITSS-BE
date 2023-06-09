@@ -46,7 +46,7 @@ sex sex NOT NULL,
 age INTEGER NOT NULL,
 location TEXT NOT NULL,
 meal_price_range NUMERIC NOT NULL,
-description TEXT NOT NULL,
+description TEXT,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -71,6 +71,69 @@ BEGIN
 update users
 set 
 updated_at = CURRENT_TIMESTAMP where id = new.id;
+RETURN NEW;
+END;
+$example_table$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS recommendation(
+id SERIAL PRIMARY KEY,
+invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id),
+recommendation_sender_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id),
+meal_price NUMERIC NOT NULL,
+description TEXT, 
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+	
+CREATE TABLE IF NOT EXISTS contracts(
+id SERIAL PRIMARY KEY,
+recommendation_id INTEGER, FOREIGN KEY (recommendation_id) REFERENCES recommendation(id),
+invitation_sender_rating NUMERIC NOT NULL,
+recommendation_sender_rating NUMERIC NOT NULL,
+invitation_sender_cmt TEXT,
+recommendation_sender_cmt TEXT,
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+
+
+
+
+
+--update RecommentStar
+create trigger updateRecommentStar after INSERT on contracts
+for each row
+execute procedure updateRecommentStar();
+
+create or replace function updateRecommentStar() returns trigger
+as $$
+BEGIN
+update users
+set rating = (select sum(b3.recommendation_sender_rating)/count(b3.recommendation_sender_rating) from users a1,
+(select b2.recommendation_sender_id, b1.recommendation_sender_rating from recommendation b2,
+(select * from contracts where recommendation_id = new.recommendation_id ) b1 where b1.recommendation_id = b2.id) b3
+where a1.id = b3.recommendation_sender_id);
+
+RETURN NEW;
+END;
+$$ 
+LANGUAGE plpgsql;
+
+
+--update InvitationStar		
+create trigger updateInvitationStar after INSERT on contracts
+for each row
+execute procedure updateInvitationStar();
+
+create or replace function updateInvitationStar() returns trigger
+as $example_table$
+BEGIN
+update users
+set 
+rating = (select sum(b3.invitation_sender_rating)/count(b3.invitation_sender_rating) from users a1,
+(select b2.invitation_sender_id , b1.invitation_sender_rating from invitation b2,
+(select * from contracts where recommendation_id = new.recommendation_id ) b1 where b1.recommendation_id = b2.id) b3
+where a1.id = b3.invitation_sender_id);
 RETURN NEW;
 END;
 $example_table$ LANGUAGE plpgsql;
