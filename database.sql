@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS users(
     age INT,
     bio TEXT,
     rating rate,
-    -- add avatar field, co the set default la avatar default (tinh sau)
     avatar TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
@@ -59,3 +58,19 @@ CREATE TABLE IF NOT EXISTS invitation_rejections(
   partner_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id),
   rejected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+
+---updated_at trigger on users
+create trigger updateTime after INSERT OR UPDATE on users
+for each row
+WHEN (pg_trigger_depth() = 0)
+execute procedure updateTime();
+
+create or replace function updateTime() returns trigger
+as $example_table$
+BEGIN
+update users
+set 
+updated_at = CURRENT_TIMESTAMP where id = new.id;
+RETURN NEW;
+END;
+$example_table$ LANGUAGE plpgsql;
