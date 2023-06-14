@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE TABLE IF NOT EXISTS invitations(
 id SERIAL PRIMARY KEY,
 invitation_sender_id INTEGER NOT NULL,
-FOREIGN KEY (invitation_sender_id) REFERENCES users(id),
+FOREIGN KEY (invitation_sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
 start_time TEXT NOT NULL,
 end_time TEXT NOT NULL,
 date TIMESTAMP NOT NULL,
@@ -49,13 +49,13 @@ meal_price_range NUMERIC NOT NULL,
 description TEXT,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
+)
 
 --reject table
 CREATE TABLE IF NOT EXISTS invitation_rejections(
   id SERIAL PRIMARY KEY,
-  invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id),
-  partner_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id),
+  invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  partner_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   rejected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -75,10 +75,11 @@ RETURN NEW;
 END;
 $example_table$ LANGUAGE plpgsql;
 
-CREATE TABLE IF NOT EXISTS recommendation(
+CREATE TABLE IF NOT EXISTS recommendations(
 id SERIAL PRIMARY KEY,
-invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id),
-recommendation_sender_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id),
+invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+recommendation_sender_id INTEGER, FOREIGN KEY (recommendation_sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+food_recommend TEXT NOT NULL,
 meal_price NUMERIC NOT NULL,
 description TEXT, 
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -87,7 +88,7 @@ updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 	
 CREATE TABLE IF NOT EXISTS contracts(
 id SERIAL PRIMARY KEY,
-recommendation_id INTEGER, FOREIGN KEY (recommendation_id) REFERENCES recommendation(id),
+recommendation_id INTEGER, FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE ON UPDATE CASCADE,
 invitation_sender_rating NUMERIC NOT NULL,
 recommendation_sender_rating NUMERIC NOT NULL,
 invitation_sender_cmt TEXT,
