@@ -89,8 +89,8 @@ updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 CREATE TABLE IF NOT EXISTS contracts(
 id SERIAL PRIMARY KEY,
 recommendation_id INTEGER, FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE ON UPDATE CASCADE,
-invitation_sender_rating NUMERIC NOT NULL,
-recommendation_sender_rating NUMERIC NOT NULL,
+invitation_sender_rating NUMERIC,
+recommendation_sender_rating NUMERIC,
 invitation_sender_cmt TEXT,
 recommendation_sender_cmt TEXT,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
