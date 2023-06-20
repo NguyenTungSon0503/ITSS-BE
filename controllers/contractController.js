@@ -45,4 +45,26 @@ const getContractUser = async (req, res) => {
   }
 };
 
-export { createContract, getContractUser };
+const getContractPartner = async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    const userInfo = await decodedToken(accessToken);
+    // only user role is allowed
+    if (userInfo.role !== "partner") {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to perform this action" });
+    }
+    const user_id = userInfo.id;
+    const getContractsInfo = await pool.query(
+      "SELECT c.id,c.recommendation_id,c.invitation_sender_rating,c.recommendation_sender_rating,c.invitation_sender_cmt,c.recommendation_sender_cmt,i.start_time,i.end_time,i.date FROM contracts c INNER JOIN recommendations r on c.recommendation_id = r.id INNER JOIN invitations i ON r.invitation_id = i.id WHERE r.recommendation_sender_id = $1;",
+      [user_id]
+    );
+    res.send(getContractsInfo.rows);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { createContract, getContractUser, getContractPartner };
