@@ -6,6 +6,7 @@ import {
   getInvitations,
   createRejectedInvitation,
   getInvitationsNew,
+  getAllInvitationsUser
 } from "../controllers/offerController.js";
 import authenticateToken from "../middleware/authorization.js";
 
@@ -27,6 +28,8 @@ router.get("/test", authenticateToken, getInvitations);
 router.post("/reject", authenticateToken, createRejectedInvitation);
 
 router.get("/invitations", authenticateToken, getInvitationsNew);
+
+router.get("/user_offer", authenticateToken, getAllInvitationsUser)
 
 
 export default router;
