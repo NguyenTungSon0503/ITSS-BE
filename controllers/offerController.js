@@ -270,6 +270,8 @@ const getInvitationsNew = async (req, res) => {
           const invitedSenderInfo = {
             user_name: invitationSenderInfo.name,
             avatar: invitationSenderInfo.avatar,
+            age: invitationSenderInfo.age,
+            sex: invitationSenderInfo.sex
           };
           const data = {
             userInfo: invitedSenderInfo,
