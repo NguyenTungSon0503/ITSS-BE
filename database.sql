@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE TABLE IF NOT EXISTS invitations(
 id SERIAL PRIMARY KEY,
 invitation_sender_id INTEGER NOT NULL,
-FOREIGN KEY (invitation_sender_id) REFERENCES users(id),
+FOREIGN KEY (invitation_sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
 start_time TEXT NOT NULL,
 end_time TEXT NOT NULL,
 date TIMESTAMP NOT NULL,
@@ -46,16 +46,16 @@ sex sex NOT NULL,
 age INTEGER NOT NULL,
 location TEXT NOT NULL,
 meal_price_range NUMERIC NOT NULL,
-description TEXT NOT NULL,
+description TEXT,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
+)
 
 --reject table
 CREATE TABLE IF NOT EXISTS invitation_rejections(
   id SERIAL PRIMARY KEY,
-  invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id),
-  partner_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id),
+  invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  partner_id INTEGER, FOREIGN KEY (partner_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
   rejected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -71,6 +71,77 @@ BEGIN
 update users
 set 
 updated_at = CURRENT_TIMESTAMP where id = new.id;
+RETURN NEW;
+END;
+$example_table$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS recommendations(
+id SERIAL PRIMARY KEY,
+invitation_id INTEGER, FOREIGN KEY (invitation_id) REFERENCES invitations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+recommendation_sender_id INTEGER, FOREIGN KEY (recommendation_sender_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+food_recommend TEXT NOT NULL,
+meal_price NUMERIC NOT NULL,
+description TEXT, 
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+--reject table
+CREATE TABLE IF NOT EXISTS recommendation_rejections(
+  id SERIAL PRIMARY KEY,
+  recommendation_id INTEGER, FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  user_id INTEGER, FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+  rejected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+	
+CREATE TABLE IF NOT EXISTS contracts(
+id SERIAL PRIMARY KEY,
+recommendation_id INTEGER, FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE ON UPDATE CASCADE,
+invitation_sender_rating NUMERIC NOT NULL,
+recommendation_sender_rating NUMERIC NOT NULL,
+invitation_sender_cmt TEXT,
+recommendation_sender_cmt TEXT,
+created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+)
+
+
+
+
+
+--update RecommentStar
+create trigger updateRecommentStar after INSERT on contracts
+for each row
+execute procedure updateRecommentStar();
+
+create or replace function updateRecommentStar() returns trigger
+as $$
+BEGIN
+update users
+set rating = (select sum(b3.recommendation_sender_rating)/count(b3.recommendation_sender_rating) from users a1,
+(select b2.recommendation_sender_id, b1.recommendation_sender_rating from recommendation b2,
+(select * from contracts where recommendation_id = new.recommendation_id ) b1 where b1.recommendation_id = b2.id) b3
+where a1.id = b3.recommendation_sender_id);
+
+RETURN NEW;
+END;
+$$ 
+LANGUAGE plpgsql;
+
+
+--update InvitationStar		
+create trigger updateInvitationStar after INSERT on contracts
+for each row
+execute procedure updateInvitationStar();
+
+create or replace function updateInvitationStar() returns trigger
+as $example_table$
+BEGIN
+update users
+set 
+rating = (select sum(b3.invitation_sender_rating)/count(b3.invitation_sender_rating) from users a1,
+(select b2.invitation_sender_id , b1.invitation_sender_rating from invitation b2,
+(select * from contracts where recommendation_id = new.recommendation_id ) b1 where b1.recommendation_id = b2.id) b3
+where a1.id = b3.invitation_sender_id);
 RETURN NEW;
 END;
 $example_table$ LANGUAGE plpgsql;
