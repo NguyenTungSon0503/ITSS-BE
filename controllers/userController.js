@@ -19,8 +19,8 @@ const createUser = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const newUser = await pool.query(
-      "INSERT INTO users (name, email, password, role) VALUES ($1,$2,$3,$4) RETURNING *",
-      [req.body.name, req.body.email, hashedPassword, req.body.role]
+      "INSERT INTO users (email, password, role) VALUES ($1,$2,$3) RETURNING *",
+      [req.body.email, hashedPassword, req.body.role]
     );
     res.json(jwtTokens(newUser.rows[0]));
   } catch (error) {
