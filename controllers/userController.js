@@ -37,4 +37,20 @@ const deleteUsers = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-export { getUsers, createUser, deleteUsers };
+
+const updateProfile = async (req, res) => {
+  const accessToken = req.cookies.accessToken;
+  const userInfo = await decodedToken(accessToken);
+  const user_id = userInfo.id;
+  const { name, nation, location, sex, age, bio } = req.body;
+  try {
+    const updatedUser = await pool.query(
+      "UPDATE users SET name=$1, nation=$2, location=$3, sex=$4, age=$5, bio=$6 WHERE id=$7 RETURNING *",
+      [name, nation, location, sex, age, bio, user_id]
+    );
+    res.json(updatedUser.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+export { getUsers, createUser, deleteUsers, updateProfile };
