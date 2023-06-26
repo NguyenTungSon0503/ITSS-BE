@@ -10,6 +10,8 @@ import imageRouter from "./routes/image-routes.js"
 import offersRouter from "./routes/offers-routes.js"
 import recommendationsRouter from "./routes/recommendation-routes.js"
 import contractsRouter from  "./routes/contracts-routes.js"
+import swaggerJSDoc from "swagger-jsdoc";
+import swaggerUI from "swagger-ui-express";
 //change domain to /api/images
 dotenv.config();
 
@@ -24,6 +26,19 @@ app.use(json());
 app.use(cookieParser());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+const swaggerOptions = {
+  swaggerDefinition: {
+    info: {
+      title: "Library API",
+      version: '1.0.0',
+    },
+  },
+  apis: ["./routes/auth-routes.js","./routes/users-routes.js" ],
+};
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
+
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocs));
 
 app.use("/", express.static(join(__dirname, "public")));
 app.use("/api/images", imageRouter);
