@@ -3,6 +3,7 @@ import {
   getUsers,
   createUser,
   deleteUsers,
+  updateProfile,
 } from "../controllers/userController.js";
 import authenticateToken from "../middleware/authorization.js";
 
@@ -14,6 +15,8 @@ router.get("/", authenticateToken, getUsers);
 
 // dang ky user, tra ve token
 router.post("/", createUser);
+
+router.post("/update", authenticateToken, updateProfile);
 
 // xoa toan bo users
 router.delete("/", deleteUsers);
