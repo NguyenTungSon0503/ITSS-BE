@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import imageRouter from "./routes/image-routes.js"
 import offersRouter from "./routes/offers-routes.js"
 import recommendationsRouter from "./routes/recommendation-routes.js"
+import contractsRouter from  "./routes/contracts-routes.js"
 //change domain to /api/images
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/offers", offersRouter);
 app.use("/api/recommendations", recommendationsRouter);
+app.use("/api/contracts", contractsRouter);
+
 
 
 app.listen(PORT, () => {

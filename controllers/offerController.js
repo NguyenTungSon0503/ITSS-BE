@@ -267,17 +267,30 @@ const getInvitationsNew = async (req, res) => {
       "SELECT invitation_id FROM invitation_rejections WHERE partner_id = $1",
       [userID]
     );
+    const getAcceptedInvitationsIDs = await pool.query(
+      "SELECT invitation_id FROM recommendations WHERE recommendation_sender_id = $1",
+      [userID]
+    );
     const arrayInvitationsIDs = [];
     const arrayRejectedInvitationsIDs = [];
+    const arrayAcceptedInvitationsIDs = [];
     getInvitationsIDs.rows.map((invitationID) => {
       arrayInvitationsIDs.push(invitationID.id);
     });
     getRejectedInvitationsIDs.rows.map((invitationID) => {
       arrayRejectedInvitationsIDs.push(invitationID.invitation_id);
     });
+    getAcceptedInvitationsIDs.rows.map((invitationID) => {
+      arrayAcceptedInvitationsIDs.push(invitationID.invitation_id);
+    });
+    // console.log(arrayAcceptedInvitationsIDs)
+    
+    const abc =  arrayAcceptedInvitationsIDs.concat(arrayRejectedInvitationsIDs)
+
     const arrayShowInvitationsIDs = arrayInvitationsIDs.filter(
-      (element) => !arrayRejectedInvitationsIDs.includes(element)
+      (element) => !abc.includes(element)
     );
+    console.log(arrayShowInvitationsIDs)
     const responseData = [];
     for (let id of arrayShowInvitationsIDs) {
       try {
@@ -316,6 +329,7 @@ const getInvitationsNew = async (req, res) => {
         res.status(500).json({ message: error.message });
       }
     }
+    // console.log(responseData.length);
     res.send(responseData);
   } catch (error) {
     res.status(500).json({ message: error.message });

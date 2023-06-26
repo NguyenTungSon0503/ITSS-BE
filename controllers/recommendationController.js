@@ -183,7 +183,6 @@ const getRecommendationsNew = async (req, res) => {
           };
           return data;
         });
-
         const resolvedData = await Promise.all(promises);
         return {
           invitationInfo: invitationJSON,
