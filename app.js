@@ -10,6 +10,9 @@ import imageRouter from "./routes/image-routes.js"
 import offersRouter from "./routes/offers-routes.js"
 import recommendationsRouter from "./routes/recommendation-routes.js"
 import contractsRouter from  "./routes/contracts-routes.js"
+import http from "http";
+import {Server, Socket} from 'socket.io';
+import { createServer } from 'http';
 //change domain to /api/images
 dotenv.config();
 
@@ -34,7 +37,25 @@ app.use("/api/recommendations", recommendationsRouter);
 app.use("/api/contracts", contractsRouter);
 
 
+const server = http.createServer(app);
 
-app.listen(PORT, () => {
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+io.on("connection", (socket) => { ///Handle khi có connect từ client tới
+  console.log("New client connected" + socket.id); 
+  socket.on("sendDataClient", function(data) { // Handle khi có sự kiện tên là sendDataClient từ phía client
+    io.emit("sendDataServer", {data });// phát sự kiện  có tên sendDataServer cùng với dữ liệu tin nhắn từ phía server
+  })
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected"); // Khi client disconnect thì log ra terminal.
+  });
+});
+
+io.listen(5001)
+server.listen(PORT, () => {
   console.log(`Server is listening on port:${PORT}`);
 });
