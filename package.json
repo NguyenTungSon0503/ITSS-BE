@@ -22,8 +22,6 @@
     "cloudinary": "^1.37.0",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^4.1.4",
     "socket.io": "^4.1.1"
   },
   "devDependencies": {
