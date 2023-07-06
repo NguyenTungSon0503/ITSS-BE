@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS users(
     sex sex,
     age INT,
     bio TEXT,
-    rating rate,
+    rating NUMERIC,
     avatar TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
