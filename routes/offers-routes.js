@@ -22,11 +22,11 @@ router.post("/", authenticateToken, createInvitation);
 router.get("/partner_offer", authenticateToken, getInvitationsTest);
 
 // API format: each invitation has its own userInfo
-router.get("/invitations", authenticateToken, getInvitations);
+router.get("/test", authenticateToken, getInvitations);
 
 router.post("/reject", authenticateToken, createRejectedInvitation);
 
-router.get("/test", authenticateToken, getInvitationsNew);
+router.get("/invitations", authenticateToken, getInvitationsNew);
 
 
 export default router;
