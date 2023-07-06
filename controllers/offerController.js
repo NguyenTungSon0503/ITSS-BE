@@ -172,6 +172,7 @@ const getInvitations = async (req, res) => {
         const invitedSenderInfo = {
           user_name: invitationSenderInfo.name,
           avatar: invitationSenderInfo.avatar,
+          age: invitationSenderInfo.age,
         };
         // object with userInfo and invitationInfor
         const data = {
@@ -253,13 +254,12 @@ const getInvitationsNew = async (req, res) => {
       arrayAcceptedInvitationsIDs.push(invitationID.invitation_id);
     });
     // console.log(arrayAcceptedInvitationsIDs)
-    
-    const abc =  arrayAcceptedInvitationsIDs.concat(arrayRejectedInvitationsIDs)
+
+    const abc = arrayAcceptedInvitationsIDs.concat(arrayRejectedInvitationsIDs);
 
     const arrayShowInvitationsIDs = arrayInvitationsIDs.filter(
       (element) => !abc.includes(element)
     );
-    console.log(arrayShowInvitationsIDs)
     const responseData = [];
     for (let id of arrayShowInvitationsIDs) {
       try {
@@ -283,6 +283,7 @@ const getInvitationsNew = async (req, res) => {
           const invitedSenderInfo = {
             user_name: invitationSenderInfo.name,
             avatar: invitationSenderInfo.avatar,
+            age: invitationSenderInfo.age,
           };
           const data = {
             userInfo: invitedSenderInfo,
