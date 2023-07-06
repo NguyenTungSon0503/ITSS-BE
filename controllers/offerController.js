@@ -2,6 +2,37 @@ import decodedToken from "../middleware/decode.js";
 import pool from "../db.js";
 import fixDate from "../utils/date-helpers.js";
 
+const getAllInvitationsUser = async (req, res) => {
+  try {
+    const accessToken = req.cookies.accessToken;
+    const userInfo = await decodedToken(accessToken);
+    // only user role is allowed
+    if (userInfo.role !== "user") {
+      return res
+        .status(401)
+        .json({ message: "You are not authorized to perform this action" });
+    }
+    const userId = userInfo.id;
+    const getInvitationsInfo = await pool.query("SELECT * FROM invitations WHERE invitation_sender_id = $1", [userId]);
+    //update all of date of invitations with fixDate function
+    let invitationsInfo = getInvitationsInfo.rows;
+    invitationsInfo = invitationsInfo.map((invitation) => {
+      const updatedDate = fixDate(invitation.date);
+      return {
+        ...invitation,
+        date: updatedDate,
+      };
+    });
+
+    // console.log(invitationsInfo);
+    res.send({ invitations: invitationsInfo });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 const getAllInvitations = async (req, res) => {
   try {
     const accessToken = req.cookies.accessToken;
@@ -206,7 +237,7 @@ const createRejectedInvitation = async (req, res) => {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
     const partner_id = userInfo.id;
-    const { invitation_id } = req.body;
+    const invitation_id  = req.body.id;
     const newRejectedInvitation = await pool.query(
       "INSERT INTO invitation_rejections (invitation_id, partner_id) VALUES ($1, $2) RETURNING *",
       [invitation_id, partner_id]
@@ -284,6 +315,7 @@ const getInvitationsNew = async (req, res) => {
             user_name: invitationSenderInfo.name,
             avatar: invitationSenderInfo.avatar,
             age: invitationSenderInfo.age,
+            sex: invitationSenderInfo.sex
           };
           const data = {
             userInfo: invitedSenderInfo,
@@ -311,4 +343,5 @@ export {
   createInvitation,
   getInvitationsTest,
   getInvitations,
+  getAllInvitationsUser
 };
