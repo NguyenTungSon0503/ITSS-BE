@@ -11,7 +11,7 @@ router.use(express.json());
 
 router.get("/user", authenticateToken, getReviewUser);
 
-router.get("/partner", authenticateToken, getReviewPartner);
+router.post("/partner", getReviewPartner);
 
 
 export default router;
