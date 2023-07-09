@@ -6,7 +6,7 @@ const getReviewUser = async (req, res, next) => {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
     // only user role is allowed
-    if (userInfo.role !== "user") {
+    if (userInfo.role !== "partner") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
@@ -29,7 +29,7 @@ const getReviewPartner = async (req, res, next) => {
     const accessToken = req.cookies.accessToken;
     const userInfo = await decodedToken(accessToken);
     // only user role is allowed
-    if (userInfo.role !== "partner") {
+    if (userInfo.role !== "user") {
       return res
         .status(401)
         .json({ message: "You are not authorized to perform this action" });
