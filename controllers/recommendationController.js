@@ -58,6 +58,7 @@ const getRecommendations = async (req, res) => {
             [recommendation.recommendation_sender_id]
           );
           const userInfo = {
+            user_id: getUserInfo.rows[0].id,
             user_name: getUserInfo.rows[0].name,
             avatar: getUserInfo.rows[0].avatar,
             age: getUserInfo.rows[0].age,
