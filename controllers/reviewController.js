@@ -1,5 +1,6 @@
 import decodedToken from "../middleware/decode.js";
 import pool from "../db.js";
+import fixDate from "../utils/date-helpers.js";
 
 const getReviewUser = async (req, res, next) => {
   try {
@@ -28,11 +29,20 @@ const getReviewPartner = async (req, res, next) => {
   const { partner_id } = req.body;
   console.log(partner_id);
   try {
+    const responseData = [];
     const getReview = await pool.query(
-      "SELECT c.recommendation_sender_rating, c.recommendation_sender_cmt, u.name FROM contracts c INNER JOIN recommendations r ON c.recommendation_id = r.id INNER JOIN invitations i ON r.invitation_id = i.id INNER JOIN users u ON i.invitation_sender_id = u.id  WHERE r.recommendation_sender_id = $1",
+      "SELECT c.recommendation_sender_rating, c.recommendation_sender_cmt, u.name, c.updated_at FROM contracts c INNER JOIN recommendations r ON c.recommendation_id = r.id INNER JOIN invitations i ON r.invitation_id = i.id INNER JOIN users u ON i.invitation_sender_id = u.id  WHERE r.recommendation_sender_id = $1",
       [partner_id]
     );
-    res.json(getReview.rows);
+    getReview.rows.map((item) => {
+      const updatedDate = fixDate(item.updated_at);
+      const data = {
+        ...item,
+        updated_at: updatedDate
+      }
+      responseData.push(data);
+    })
+    res.json(responseData);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
