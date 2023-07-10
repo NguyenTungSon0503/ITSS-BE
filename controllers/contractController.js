@@ -67,7 +67,7 @@ const getContractPartner = async (req, res) => {
     }
     const user_id = userInfo.id;
     const getContractsInfo = await pool.query(
-      "SELECT c.id,c.recommendation_id,c.invitation_sender_rating,c.recommendation_sender_rating,c.invitation_sender_cmt,c.recommendation_sender_cmt,i.start_time,i.end_time,i.date, r.food_recommend,u.name, u.age, u.sex, u.avatar FROM contracts c INNER JOIN recommendations r on c.recommendation_id = r.id INNER JOIN invitations i ON r.invitation_id = i.id INNER JOIN users u ON i.invitation_sender_id = u.id WHERE r.recommendation_sender_id = $1;",
+      "SELECT c.id,c.recommendation_id,c.invitation_sender_rating,c.recommendation_sender_rating,c.invitation_sender_cmt,c.recommendation_sender_cmt,i.start_time,i.end_time,i.date,r.description, r.meal_price, r.food_recommend,u.name, u.age, u.sex, u.avatar FROM contracts c INNER JOIN recommendations r on c.recommendation_id = r.id INNER JOIN invitations i ON r.invitation_id = i.id INNER JOIN users u ON i.invitation_sender_id = u.id WHERE r.recommendation_sender_id = $1;",
       [user_id]
     );
     res.send(getContractsInfo.rows);
