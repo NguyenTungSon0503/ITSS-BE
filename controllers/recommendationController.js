@@ -122,76 +122,89 @@ const getRecommendationsNew = async (req, res) => {
         .json({ message: "You are not authorized to perform this action" });
     }
     const userId = userInfo.id;
+    const getRejectRecommendations = await pool.query(
+      "SELECT recommendation_id FROM recommendation_rejections where user_id = $1",
+      [userId]
+    );
+    const getAllRecommendations = await pool.query(
+      "select r.id from recommendations r INNER JOIN invitations i on r.invitation_id = i.id where i.invitation_sender_id = $1;",
+      [userId]
+    );
+    const getContractedRecommendations = await pool.query(
+      "select r.id from recommendations r INNER JOIN contracts c on c.recommendation_id = r.id INNER JOIN invitations i on r.invitation_id = i.id where i.invitation_sender_id = $1;",
+      [userId]
+    );
+    let arrayContractedRecommendationsId = [];
+    let arrayRejectedRecommendationsId = [];
+    let arrayAllRecommendationsId = [];
+    getContractedRecommendations.rows.map((item) => {
+      arrayContractedRecommendationsId.push(item.id);
+    });
+    getRejectRecommendations.rows.map((item) => {
+      arrayRejectedRecommendationsId.push(item.recommendation_id);
+    });
+    getAllRecommendations.rows.map((item) =>
+      arrayAllRecommendationsId.push(item.id)
+    );
+    const dontShowRecommendationsId = arrayContractedRecommendationsId.concat(
+      arrayRejectedRecommendationsId
+    );
+    const showRecommendationsId = arrayAllRecommendationsId.filter(
+      (element) => !dontShowRecommendationsId.includes(element)
+    );
+
     const getInvitationsInfo = await pool.query(
       "SELECT * FROM invitations WHERE invitation_sender_id = $1",
       [userId]
     );
     const invitations = getInvitationsInfo.rows;
-    const getRejectRecommendations = await pool.query(
-      "SELECT recommendation_id FROM recommendation_rejections where user_id = $1",
-      [userId]
-    );
-    const arrayRecommendationsID = [];
-    const arrayRejectRecommendationsID = [];
-    getRejectRecommendations.rows.map((recommendation) => {
-      arrayRejectRecommendationsID.push(recommendation.recommendation_id);
-    });
-    console.log(arrayRejectRecommendationsID);
-
-    let arrayShowRecommendationsIDs;
+    let arrayShowRecommendations = [];
 
     const responseData = await Promise.all(
       invitations.map(async (invitation) => {
-        const getRecommendationsInfo = await pool.query(
-          "SELECT * FROM recommendations WHERE invitation_id = $1 ORDER BY created_at DESC;",
+        const getRecommendations = await pool.query(
+          "select * from recommendations WHERE invitation_id = $1",
           [invitation.id]
         );
-        getRecommendationsInfo.rows.map((test) => {
-          arrayRecommendationsID.push(test.id);
-        });
-        arrayShowRecommendationsIDs = arrayRecommendationsID.filter(
-          (element) => !arrayRejectRecommendationsID.includes(element)
-        );
-        console.log(arrayShowRecommendationsIDs);
         const updatedDate = fixDate(invitation.date);
         const invitationJSON = {
           ...invitation,
           date: updatedDate,
         };
-
-        const promises = arrayShowRecommendationsIDs.map(async (id) => {
-          const recommendationInfo = await pool.query(
-            "SELECT * FROM recommendations WHERE id = $1",
-            [id]
-          );
-          const recommendation = recommendationInfo.rows[0];
-          const recommendation_sender_id =
-            recommendationInfo.rows[0].recommendation_sender_id;
-          const getUserInfo = await pool.query(
-            "SELECT * FROM users WHERE id = $1",
-            [recommendation_sender_id]
-          );
-          const userInfo = {
-            user_name: getUserInfo.rows[0].name,
-            avatar: getUserInfo.rows[0].avatar,
-            age: getUserInfo.rows[0].age,
-            sex: getUserInfo.rows[0].sex,
-            location: getUserInfo.rows[0].location,
-          };
-          const data = {
-            userInfo: userInfo,
-            recommendationInfo: recommendation,
-          };
-          return data;
-        });
-        const resolvedData = await Promise.all(promises);
-        return {
+        const recommendations = await Promise.all(
+          getRecommendations.rows
+            .filter(recommendation => showRecommendationsId.includes(recommendation.id))
+            .map(async (recommendationInfo) => {
+              const getUserInfo = await pool.query(
+                "select u.id, u.name, u.avatar, u.age, u.sex, u.location from users u INNER JOIN recommendations r ON r.recommendation_sender_id = u.id where r.id = $1",
+                [recommendationInfo.id]
+              );
+              const { id, name, avatar, age, sex, location } = getUserInfo.rows[0];
+              return {
+                recommendationInfo,
+                userInfo: {
+                  user_id: id,
+                  user_name: name,
+                  avatar,
+                  age,
+                  sex,
+                  location,
+                },
+              };
+            })
+        );
+        const data = {
           invitationInfo: invitationJSON,
-          recommendations: resolvedData,
+          recommendations,
         };
+        return data;
       })
     );
     res.send(responseData);
+    // showRecommendationsId.map(async (id) => {
+    //   const getRecommendations = await pool.query("select * ");
+    // });
+    // res.send(showRecommendationsId);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
