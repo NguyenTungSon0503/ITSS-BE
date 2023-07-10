@@ -34,10 +34,18 @@ const getReviewPartner = async (req, res, next) => {
       "SELECT c.recommendation_sender_rating, c.recommendation_sender_cmt, u.name, c.updated_at FROM contracts c INNER JOIN recommendations r ON c.recommendation_id = r.id INNER JOIN invitations i ON r.invitation_id = i.id INNER JOIN users u ON i.invitation_sender_id = u.id  WHERE r.recommendation_sender_id = $1",
       [partner_id]
     );
+    const getCount = await pool.query("SELECT COUNT(*) AS total_records FROM contracts c INNER JOIN recommendations r on c.recommendation_id=r.id INNER JOIN invitations i on r.invitation_id = i.id INNER JOIN users u ON r.recommendation_sender_id = u.id where u.id = $1;",[partner_id])
+    
+    const getSum = await pool.query("SELECT SUM(c.recommendation_sender_rating) AS total_rating FROM contracts c INNER JOIN recommendations r on c.recommendation_id=r.id INNER JOIN invitations i on r.invitation_id = i.id INNER JOIN users u ON r.recommendation_sender_id = u.id where u.id = $1;", [partner_id])
+
+
+    const rating = parseInt(getSum.rows[0]?.total_rating)/parseInt(getCount.rows[0]?.total_records)
+
     getReview.rows.map((item) => {
       const updatedDate = fixDate(item.updated_at);
       const data = {
         ...item,
+        rating: rating,
         updated_at: updatedDate
       }
       responseData.push(data);

@@ -49,7 +49,7 @@ meal_price_range NUMERIC NOT NULL,
 description TEXT,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 --reject table
 CREATE TABLE IF NOT EXISTS invitation_rejections(
@@ -84,7 +84,7 @@ meal_price NUMERIC NOT NULL,
 description TEXT, 
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 --reject table
 CREATE TABLE IF NOT EXISTS recommendation_rejections(
   id SERIAL PRIMARY KEY,
@@ -102,7 +102,7 @@ invitation_sender_cmt TEXT,
 recommendation_sender_cmt TEXT,
 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
-)
+);
 
 
 
@@ -142,6 +142,21 @@ rating = (select sum(b3.invitation_sender_rating)/count(b3.invitation_sender_rat
 (select b2.invitation_sender_id , b1.invitation_sender_rating from invitation b2,
 (select * from contracts where recommendation_id = new.recommendation_id ) b1 where b1.recommendation_id = b2.id) b3
 where a1.id = b3.invitation_sender_id);
+RETURN NEW;
+END;
+$example_table$ LANGUAGE plpgsql;
+
+create trigger updateTime after INSERT OR UPDATE on contracts
+for each row
+WHEN (pg_trigger_depth() = 0)
+execute procedure updateTime();
+
+create or replace function updateTimeContracts() returns trigger
+as $example_table$
+BEGIN
+update contracts
+set 
+updated_at = CURRENT_TIMESTAMP where id = new.id;
 RETURN NEW;
 END;
 $example_table$ LANGUAGE plpgsql;
